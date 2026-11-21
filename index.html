@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Loop Gizmo v1.0</title>
+<title>Loop Gizmo v2.0</title>
 <style>
 :root{
   --chassis:#16171a; --panel:#1d1f23; --strip:#222429; --edge:#33363c;
@@ -40,13 +40,13 @@ body{min-height:100vh;display:flex;flex-direction:column;align-items:center;padd
 .knob.mid{width:3.6em;height:3.6em}
 .knob.sm{width:3em;height:3em}
 .knobwrap{display:flex;flex-direction:column;align-items:center;gap:.35em}
-.knobwrap .val{font-size:.85em;color:var(--txt);font-variant-numeric:tabular-nums;min-height:1.2em}
+.knobwrap .val{font-size:1.15em;font-weight:600;color:var(--txt);font-variant-numeric:tabular-nums;min-height:1.2em}
 /* LCD */
 .lcdwrap{background:#c9ccd1;padding:.45em;border-radius:.4em;justify-self:center;width:100%;max-width:34em}
 .lcd{background:var(--lcd-bg);color:var(--lcd-fg);font-family:Consolas,"Lucida Console",monospace;border-radius:.2em;padding:.6em .8em;height:11.5em;box-shadow:inset 0 0 .8em #0005;font-size:1em;line-height:1.3;overflow:hidden;position:relative}
 .lcd .row{display:flex;justify-content:space-between;white-space:pre}
 .lcd .hdr{font-weight:700;border-bottom:2px solid var(--lcd-fg);margin-bottom:.35em;padding-bottom:.1em}
-.lcd .trk{display:grid;grid-template-columns:repeat(5,1fr);gap:.4em;margin:.3em 0}
+.lcd .trk{display:grid;grid-template-columns:repeat(6,1fr);gap:.4em;margin:.3em 0}
 .lcd .trk div{border:2px solid var(--lcd-fg);text-align:center;padding:.1em 0;font-weight:700;font-size:.92em}
 .lcd .trk div.inv{background:var(--lcd-fg);color:var(--lcd-bg)}
 .lcd .bar{height:.55em;border:2px solid var(--lcd-fg);margin:.35em 0;position:relative}
@@ -67,8 +67,8 @@ body{min-height:100vh;display:flex;flex-direction:column;align-items:center;padd
 .led.blink{animation:blink .5s steps(1) infinite}
 @keyframes blink{50%{opacity:.35}}
 /* track strips */
-.tracks{display:grid;grid-template-columns:repeat(5,1fr);gap:.7em;margin-top:1.3em}
-.strip{background:linear-gradient(#25272c,#1a1b1f);border:1px solid var(--edge);border-radius:.8em;padding:1em .9em 1.1em;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto auto auto;gap:.6em .8em;position:relative}
+.tracks{display:grid;grid-template-columns:repeat(6,1fr);gap:.7em;margin-top:1.3em}
+.strip{background:linear-gradient(#25272c,#1a1b1f);border:1px solid var(--edge);border-radius:.8em;padding:1em .9em 2.2em;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto auto auto;gap:.6em .8em;position:relative}
 .strip.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
 .strip.drag{outline:3px dashed var(--accent)}
 .strip .btns{display:flex;flex-direction:column;gap:.6em;align-items:flex-start}
@@ -80,11 +80,11 @@ body{min-height:100vh;display:flex;flex-direction:column;align-items:center;padd
 .fader .cap{position:absolute;left:0;right:0;height:1.4em;background:linear-gradient(#55585e,#2b2d31);border:1px solid #000;border-radius:.2em;transform:translateY(-50%)}
 .fader .cap::after{content:"";position:absolute;left:10%;right:10%;top:45%;height:.18em;background:#fff}
 .strip .num{font-size:2.2em;font-weight:800;color:#eee;line-height:1}
-.strip .info{grid-column:1 / span 2;display:flex;justify-content:space-between;font-size:.85em;color:var(--dim);min-height:1.2em}
+.strip .info{grid-column:1 / span 2;display:flex;justify-content:space-between;align-items:baseline;font-size:1.1em;color:var(--dim);min-height:1.2em}
 .strip .info b{color:var(--txt);font-weight:600}
-.pad{grid-column:1 / span 2;justify-self:center;width:10.5em;height:10.5em;border-radius:50%;position:relative;cursor:pointer;touch-action:none}
+.pad{grid-column:1 / span 2;justify-self:center;width:9.6em;height:9.6em;border-radius:50%;position:relative;cursor:pointer;touch-action:none}
 .pad .ring{position:absolute;inset:0;border-radius:50%;background:#0c0c0d}
-.pad .face{position:absolute;inset:1.1em;border-radius:50%;background:radial-gradient(circle at 45% 35%,#34363b,#141517 70%);border:3px solid #000;display:flex;align-items:center;justify-content:center;box-shadow:0 .3em .6em #000c}
+.pad .face{position:absolute;inset:1em;border-radius:50%;background:radial-gradient(circle at 45% 35%,#34363b,#141517 70%);border:3px solid #000;display:flex;align-items:center;justify-content:center;box-shadow:0 .3em .6em #000c}
 .pad .face span{border:3px solid #ddd;border-radius:50%;width:65%;height:65%;display:flex;align-items:center;justify-content:center;font-size:1.6em;font-weight:800;color:#eee;letter-spacing:.05em}
 .pad:active .face{transform:scale(.97)}
 .pad .st{position:absolute;bottom:-1.5em;left:0;right:0;text-align:center;font-size:.85em;font-weight:700;letter-spacing:.1em}
@@ -105,7 +105,7 @@ input[type=file]{display:none}
 </div>
 
 <div class="device">
-  <div class="brandbar"><span class="name">LOOP GIZMO</span><span class="ver">v1.0 · 5-track loop station</span><div class="stripe"></div></div>
+  <div class="brandbar"><span class="name">LOOP GIZMO</span><span class="ver">v2.0 · 6-track loop station</span><div class="stripe"></div></div>
 
   <div class="top">
     <!-- INPUT FX -->
@@ -155,11 +155,11 @@ input[type=file]{display:none}
 </div>
 
 <div class="help">
-  <b>Keys:</b> <kbd>1</kbd>–<kbd>5</kbd> rec/dub/play track ·
-  <kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd> <kbd>R</kbd> <kbd>T</kbd> stop track (hold 1 s = clear) ·
+  <b>Keys:</b> <kbd>1</kbd>–<kbd>6</kbd> rec/dub/play track ·
+  <kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd> <kbd>R</kbd> <kbd>T</kbd> <kbd>Y</kbd> stop track (hold 1 s = clear) ·
   <kbd>Space</kbd> all start/stop · <kbd>Z</kbd> undo/redo · <kbd>B</kbd> rhythm start/stop · <kbd>G</kbd> tap tempo ·
   <kbd>←</kbd> <kbd>→</kbd> / <kbd>↑</kbd> <kbd>↓</kbd> menu cursor · <kbd>Enter</kbd> enter · <kbd>Esc</kbd> exit.<br>
-  <b>Knobs/faders:</b> drag up/down or use the mouse wheel; double-click resets.
+  <b>Manual:</b> <a href="https://github.com/droogia/loop-gizmo/blob/main/MANUAL.md" style="color:var(--accent)">MANUAL.md</a> · <b>Knobs/faders:</b> drag up/down or use the mouse wheel; double-click resets.
   <b>Tracks:</b> drop an audio file on a track strip to load it; TRACK opens track settings (reverse, one-shot, pan, import/export).
   The first recorded loop (or the rhythm, if running) sets the loop length; later tracks are synced to multiples of it.
 </div>
@@ -168,7 +168,7 @@ input[type=file]{display:none}
 <script>
 "use strict";
 /* =====================================================================
-   AUDIO WORKLET — sample-accurate looper core (5 stereo tracks)
+   AUDIO WORKLET — sample-accurate looper core (6 stereo tracks)
    ===================================================================== */
 const WORKLET_SRC = `
 const mod=(a,b)=>((a%b)+b)%b;
@@ -177,7 +177,7 @@ class Looper extends AudioWorkletProcessor{
     super();
     this.sr=sampleRate;
     this.tracks=[];
-    for(let i=0;i<5;i++)this.tracks.push({state:'empty',L:0,origin:0,bL:null,bR:null,rec:null,undo:null,redo:null,reverse:false,oneShot:false,osPos:0});
+    for(let i=0;i<6;i++)this.tracks.push({state:'empty',L:0,origin:0,bL:null,bR:null,rec:null,undo:null,redo:null,reverse:false,oneShot:false,osPos:0});
     this.master={M:0,anchor:0,src:'none'};
     this.recAction='rdp'; this.quant=true; this.lat=0; this.rhythmOn=false;
     this.last=-1; this.tick=0;
@@ -288,7 +288,7 @@ class Looper extends AudioWorkletProcessor{
       case 'clear': this.clear(d.k); break;
       case 'undo': this.undoRedo(); break;
       case 'all':
-        if(this.anyActive()){for(let k=0;k<5;k++)this.stopTrack(k,f);}
+        if(this.anyActive()){for(let k=0;k<6;k++)this.stopTrack(k,f);}
         else{let any=false;for(const t of this.tracks)if(this.hasContent(t)&&t.state==='stop'){any=true;}
           if(any){this.maybeReanchor(f);for(const t of this.tracks)if(this.hasContent(t)&&t.state==='stop'){t.state='play';t.osPos=0;}}}
         break;
@@ -328,7 +328,7 @@ class Looper extends AudioWorkletProcessor{
     const inp=inputs[0]||[];
     const inL=inp[0]||null,inR=inp[1]||inL;
     const n=outputs[0][0].length,f0=currentFrame;
-    for(let k=0;k<5;k++){
+    for(let k=0;k<6;k++){
       const t=this.tracks[k],out=outputs[k],oL=out[0],oR=out[1]||out[0];
       if(t.state==='empty'||t.state==='stop')continue;
       for(let i=0;i<n;i++){
@@ -366,6 +366,33 @@ class Looper extends AudioWorkletProcessor{
   }
 }
 registerProcessor('looper',Looper);
+
+/* Granular two-tap pitch shifter used by the TRANSPOSE effect */
+class PitchShift extends AudioWorkletProcessor{
+  static get parameterDescriptors(){return [{name:'ratio',defaultValue:1,minValue:0.25,maxValue:4}];}
+  constructor(){
+    super();
+    this.N=16384;this.buf=[new Float32Array(this.N),new Float32Array(this.N)];
+    this.w=0;this.ph=0;this.W=Math.round(sampleRate*0.06);
+  }
+  read(c,pos){
+    const N=this.N;pos=((pos%N)+N)%N;const i=Math.floor(pos),fr=pos-i;
+    const b=this.buf[c];return b[i]+(b[(i+1)%N]-b[i])*fr;
+  }
+  process(inputs,outputs,params){
+    const inp=inputs[0]||[],out=outputs[0],r=params.ratio[0],n=out[0].length,W=this.W;
+    for(let i=0;i<n;i++){
+      for(let c=0;c<2;c++){const ch=inp[c]||inp[0];this.buf[c][this.w]=ch?ch[i]:0;}
+      this.ph+=(1-r)/W;this.ph-=Math.floor(this.ph);
+      const p2=(this.ph+0.5)%1,g1=Math.sin(Math.PI*this.ph),g2=Math.sin(Math.PI*p2);
+      for(let c=0;c<out.length;c++)
+        out[c][i]=g1*this.read(c,this.w-this.ph*W-2)+g2*this.read(c,this.w-p2*W-2);
+      this.w=(this.w+1)%this.N;
+    }
+    return true;
+  }
+}
+registerProcessor('pitchshift',PitchShift);
 `;
 
 /* =====================================================================
@@ -375,7 +402,7 @@ const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const mod=(a,b)=>((a%b)+b)%b;
 let ctx=null, node=null, sr=48000;
-let st={frame:0,master:{M:0,anchor:0,src:'none'},last:-1,tracks:[...Array(5)].map(()=>({state:'empty',L:0}))};
+let st={frame:0,master:{M:0,anchor:0,src:'none'},last:-1,tracks:[...Array(6)].map(()=>({state:'empty',L:0}))};
 let micStream=null, micSrc=null, micStatus='MIC OFF';
 
 const S={ // settings / UI state
@@ -384,10 +411,16 @@ const S={ // settings / UI state
   rhythmOn:false, bars:1,
   inFx:{on:false,bank:0,types:['REVERB','DELAY','RING MOD','LO-FI'],amt:[0.4,0.4,0.5,0.5]},
   trFx:{bank:0,types:['FILTER','DELAY','REVERB','LO-FI'],amt:[0.5,0.4,0.4,0.5]},
-  tracks:[...Array(5)].map(()=>({level:0.8,pan:0.5,fx:false,reverse:false,oneShot:false})),
+  tracks:[...Array(6)].map(()=>({level:0.8,pan:0.5,fx:false,reverse:false,oneShot:false})),
   sel:0, page:'main', cursor:0, popup:null, popupT:0
 };
-const FX_TYPES=['FILTER','DELAY','REVERB','LO-FI','RING MOD'];
+const FX_TYPES=['FILTER','DELAY','REVERB','LO-FI','RING MOD','FLANGER','WAH-WAH','TRANSPOSE'];
+const semis=a=>Math.round((a-0.5)*24);
+function fmtAmt(type,v){
+  if(type==='TRANSPOSE'){const n=semis(v);return (n>0?'+':'')+n+' st';}
+  if(type==='WAH-WAH')return 'PEDAL '+Math.round(v*100)+'%';
+  return Math.round(v*100)+'%';
+}
 
 /* ---------------- Rhythm patterns (16 steps) ---------------- */
 const PATTERNS=[
@@ -410,7 +443,7 @@ async function powerOn(){
   // blob: URLs are refused on file:// pages in Chromium, so fall back to a data: URL
   try{ await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET_SRC],{type:'application/javascript'}))); }
   catch(e){ await ctx.audioWorklet.addModule('data:application/javascript;base64,'+btoa(unescape(encodeURIComponent(WORKLET_SRC)))); }
-  node=new AudioWorkletNode(ctx,'looper',{numberOfInputs:1,numberOfOutputs:5,outputChannelCount:[2,2,2,2,2],channelCount:2,channelCountMode:'explicit',channelInterpretation:'speakers'});
+  node=new AudioWorkletNode(ctx,'looper',{numberOfInputs:1,numberOfOutputs:6,outputChannelCount:[2,2,2,2,2,2],channelCount:2,channelCountMode:'explicit',channelInterpretation:'speakers'});
   node.port.onmessage=e=>onWorklet(e.data);
 
   outGain=ctx.createGain(); outGain.gain.value=S.outLevel;
@@ -433,7 +466,7 @@ async function powerOn(){
   rebuildInFx();
 
   // tracks: worklet out k -> trackIn -> [fx] -> fader -> panner -> master
-  for(let k=0;k<5;k++){
+  for(let k=0;k<6;k++){
     const tin=ctx.createGain(), fader=ctx.createGain(), pan=ctx.createStereoPanner();
     fader.gain.value=faderCurve(S.tracks[k].level); pan.pan.value=S.tracks[k].pan*2-1;
     node.connect(tin,k,0); fader.connect(pan); pan.connect(master);
@@ -506,8 +539,28 @@ function makeFx(type){
     o.connect(g.gain); input.connect(g); g.connect(wet); wet.gain.value=1; dry.gain.value=0.15;
     fx.nodes.push(o);
     fx.set=a=>{o.frequency.setTargetAtTime(30+a*900,ctx.currentTime,0.02);};
+  }else if(type==='FLANGER'){
+    // short delay swept by a slow LFO (one sweep every 2 bars), with feedback
+    const d=ctx.createDelay(0.05), fb=ctx.createGain(), lfo=ctx.createOscillator(), depth=ctx.createGain();
+    d.delayTime.value=0.0035; lfo.frequency.value=currentTempo()/60/8; depth.gain.value=0.0025;
+    lfo.connect(depth); depth.connect(d.delayTime); lfo.start();
+    input.connect(d); d.connect(fb); fb.connect(d); d.connect(wet); dry.gain.value=0.75;
+    fx.nodes.push(lfo);
+    fx.set=a=>{wet.gain.value=0.2+a*0.8; fb.gain.value=0.2+a*0.65; depth.gain.value=0.0008+a*0.0026;};
+  }else if(type==='WAH-WAH'){
+    // the FX knob is the pedal: low = heel down (dark), high = toe down (bright)
+    const bp=ctx.createBiquadFilter(); bp.type='bandpass'; bp.Q.value=5;
+    const pk=ctx.createBiquadFilter(); pk.type='peaking'; pk.Q.value=4; pk.gain.value=14;
+    input.disconnect(); input.connect(pk); pk.connect(bp); bp.connect(wet); input.connect(dry);
+    wet.gain.value=2.2; dry.gain.value=0.25;
+    fx.set=a=>{const fr=350*Math.pow(2200/350,a);bp.frequency.setTargetAtTime(fr,ctx.currentTime,0.015);pk.frequency.setTargetAtTime(fr,ctx.currentTime,0.015);};
+  }else if(type==='TRANSPOSE'){
+    input.disconnect();
+    const ps=new AudioWorkletNode(ctx,'pitchshift',{numberOfInputs:1,numberOfOutputs:1,outputChannelCount:[2],channelCount:2,channelCountMode:'explicit',channelInterpretation:'speakers'});
+    input.connect(ps); ps.connect(output); fx.nodes.push(ps);
+    fx.set=a=>{ps.parameters.get('ratio').setTargetAtTime(Math.pow(2,semis(a)/12),ctx.currentTime,0.01);};
   }
-  fx.dispose=()=>{try{input.disconnect();output.disconnect();fx.nodes.forEach(n=>{n.stop&&n.stop();n.disconnect();});}catch(e){}};
+  fx.dispose=()=>{try{input.disconnect();output.disconnect();}catch(e){}fx.nodes.forEach(n=>{try{n.stop&&n.stop();n.disconnect();}catch(e){}});};
   return fx;
 }
 function rebuildInFx(){
@@ -528,7 +581,7 @@ function rebuildTrackFx(k){
     n.tin.connect(n.fx.input); n.fx.output.connect(n.fader);
   }else n.tin.connect(n.fader);
 }
-function rebuildAllTrackFx(){for(let k=0;k<5;k++)rebuildTrackFx(k);}
+function rebuildAllTrackFx(){for(let k=0;k<6;k++)rebuildTrackFx(k);}
 
 /* ---------------- Tempo / rhythm ---------------- */
 function hasContent(){return st.tracks.some(t=>t.L>0||t.state==='rec'||t.state==='wait');}
@@ -696,8 +749,8 @@ function buildBanks(container,isInput){
 }
 buildBanks($('inFxBanks'),true); buildBanks($('trFxBanks'),false);
 
-const kInFx=makeKnob($('kInFx'),()=>S.inFx.amt[S.inFx.bank],v=>{S.inFx.amt[S.inFx.bank]=v;if(inFxSlot)inFxSlot.set(v);},0.5,v=>Math.round(v*100)+'%',$('vInFx'));
-const kTrFx=makeKnob($('kTrFx'),()=>S.trFx.amt[S.trFx.bank],v=>{S.trFx.amt[S.trFx.bank]=v;trackNodes.forEach(n=>n&&n.fx&&n.fx.set(v));},0.5,v=>Math.round(v*100)+'%',$('vTrFx'));
+const kInFx=makeKnob($('kInFx'),()=>S.inFx.amt[S.inFx.bank],v=>{S.inFx.amt[S.inFx.bank]=v;if(inFxSlot)inFxSlot.set(v);},0.5,v=>fmtAmt(S.inFx.types[S.inFx.bank],v),$('vInFx'));
+const kTrFx=makeKnob($('kTrFx'),()=>S.trFx.amt[S.trFx.bank],v=>{S.trFx.amt[S.trFx.bank]=v;trackNodes.forEach(n=>n&&n.fx&&n.fx.set(v));},0.5,v=>fmtAmt(S.trFx.types[S.trFx.bank],v),$('vTrFx'));
 makeKnob($('kOut'),()=>S.outLevel,v=>{S.outLevel=v;if(outGain)outGain.gain.setTargetAtTime(v,ctx.currentTime,0.02);},0.8,v=>Math.round(v*100),$('vOut'));
 $('inFxEdit').onclick=()=>{const b=S.inFx.bank;S.inFx.types[b]=FX_TYPES[(FX_TYPES.indexOf(S.inFx.types[b])+1)%FX_TYPES.length];rebuildInFx();popup('INPUT FX '+BANKS[b]+': '+S.inFx.types[b]);};
 $('trFxEdit').onclick=()=>{const b=S.trFx.bank;S.trFx.types[b]=FX_TYPES[(FX_TYPES.indexOf(S.trFx.types[b])+1)%FX_TYPES.length];rebuildAllTrackFx();popup('TRACK FX '+BANKS[b]+': '+S.trFx.types[b]);};
@@ -717,7 +770,7 @@ const assignKnobs=ASSIGN.map(a=>{
 
 // track strips
 const strips=[];
-for(let k=0;k<5;k++){
+for(let k=0;k<6;k++){
   const s=document.createElement('div');s.className='strip';
   s.innerHTML=`<div class="btns">
       <div class="btn small fxb">FX</div>
@@ -790,7 +843,7 @@ $('enterBtn').onclick=()=>enter(1);
 $('leftBtn').onclick=()=>nav(-1);
 $('rightBtn').onclick=()=>nav(1);
 function nav(d){
-  if(S.page==='main'){S.sel=mod(S.sel+d,5);return;}
+  if(S.page==='main'){S.sel=mod(S.sel+d,6);return;}
   S.cursor=mod(S.cursor+d,PAGES[S.page].items.length);
 }
 function enter(d){
@@ -882,11 +935,11 @@ $('lcd').addEventListener('wheel',e=>{const d=e.target.closest('[data-i]');if(!d
 $('lcd').addEventListener('contextmenu',e=>{const d=e.target.closest('[data-i]');if(!d)return;e.preventDefault();S.cursor=+d.dataset.i;enter(-1);});
 
 /* ---------------- Keyboard ---------------- */
-const STOPKEYS='qwert'; const held={};
+const STOPKEYS='qwerty'; const held={};
 document.addEventListener('keydown',e=>{
   if(e.repeat||e.ctrlKey||e.metaKey||e.altKey)return;
   const key=e.key.toLowerCase();
-  if(key>='1'&&key<='5'){trackPress(+key-1);e.preventDefault();return;}
+  if(key>='1'&&key<='6'){trackPress(+key-1);e.preventDefault();return;}
   const si=STOPKEYS.indexOf(key);
   if(si>=0){trackStop(si);held[key]=setTimeout(()=>{delete held[key];trackClear(si);},1000);return;}
   switch(key){

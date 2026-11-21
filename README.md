@@ -1,19 +1,21 @@
 # Loop Gizmo
 
-**Version 1.0**
+**Version 2.0**
 
-A 5-track loop station in a single HTML file, modelled on the workflow of a hardware tabletop looper (RC-505mkII style): five synced stereo tracks, overdub, undo/redo, a built-in rhythm machine, and input/track effects.
+▶ **Live version: [https://droogia.github.io/loop-gizmo/](https://droogia.github.io/loop-gizmo/)** · 📖 **[Manual and tutorial](MANUAL.md)**
+
+A 6-track loop station in a single HTML file, modelled on the workflow of a hardware tabletop looper (RC-505mkII style): six synced stereo tracks, overdub, undo/redo, a built-in rhythm machine, and input/track effects.
 
 No install and no dependencies: open `index.html` in Chrome, Edge or Firefox, or use it through GitHub Pages.
 
 ## Features
 
-- **5 stereo tracks**, each with a REC/DUB/PLAY pad (with a progress ring), STOP (hold 1 s to clear), a level fader, an FX on/off switch and a TRACK settings button.
+- **6 stereo tracks**, each with a REC/DUB/PLAY pad (with a progress ring), STOP (hold 1 s to clear), a level fader, an FX on/off switch and a TRACK settings button.
 - **Loop sync**: the first loop (or the rhythm, if it is running) sets the master length. Later tracks become whole multiples of it, with measure-quantized start and end.
 - **Rec action**: REC→DUB→PLAY (default) or REC→PLAY→DUB.
 - **Undo/Redo**: one level per track, applied to the last recorded or overdubbed track.
 - **Rhythm**: synthesized drums with 7 patterns (Rock, Pop, Funk, Shuffle, Hip-Hop, 4-Floor, Metronome), tap tempo, and phase lock to the loops. The tempo is derived automatically from a free-recorded first loop.
-- **Input FX** (A–D) and **Track FX** (A–D): Filter, Delay, Reverb, Lo-Fi and Ring Mod. EDIT changes the type of the selected bank; the big knob sets the amount.
+- **Input FX** (A–D) and **Track FX** (A–D): Filter, Delay, Reverb, Lo-Fi, Ring Mod, Flanger, Wah-Wah (the knob works as the pedal) and Transpose (±12 semitones). EDIT changes the type of the selected bank; the big knob sets the amount.
 - **Track settings**: reverse, one-shot, pan, import of an audio file, and export of the track as a WAV file.
 - **Latency compensation** for overdubs (AUTO or a fixed value in ms).
 - Sample-accurate audio engine running in an AudioWorklet.
@@ -22,8 +24,8 @@ No install and no dependencies: open `index.html` in Chrome, Edge or Firefox, or
 
 | Control | Action |
 |---|---|
-| Track pad / `1`–`5` | Record → overdub → play (empty track: start recording; stopped track: play) |
-| STOP / `Q` `W` `E` `R` `T` | Stop track; hold 1 s to clear it |
+| Track pad / `1`–`6` | Record → overdub → play (empty track: start recording; stopped track: play) |
+| STOP / `Q` `W` `E` `R` `T` `Y` | Stop track; hold 1 s to clear it |
 | ALL START/STOP / `Space` | Stop everything, or restart all tracks from the top |
 | UNDO/REDO / `Z` | Undo the last pass; press again to redo |
 | RHYTHM START/STOP / `B` | Rhythm on/off |
@@ -38,6 +40,8 @@ No install and no dependencies: open `index.html` in Chrome, Edge or Firefox, or
 
 Knobs and faders respond to vertical dragging or the mouse wheel; double-click resets them. You can also click LCD menu items directly: click = next value, right-click or Shift-click = previous value. Drop an audio file on a track strip to load it.
 
+For the full reference and a step-by-step tutorial, see **[MANUAL.md](MANUAL.md)**.
+
 ## Notes
 
 - Use **headphones** when recording from a microphone. With INPUT MONITOR off (default), you only hear the input once it has been recorded.
@@ -47,4 +51,5 @@ Knobs and faders respond to vertical dragging or the mouse wheel; double-click r
 
 ## Version history
 
+- **2.0** — 6 tracks; new effects Flanger, Wah-Wah and Transpose; larger numeric readouts; full manual with tutorial.
 - **1.0** — First release.

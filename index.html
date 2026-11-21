@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loop Gizmo v1.0</title>
+<style>
+:root{
+  --chassis:#16171a; --panel:#1d1f23; --strip:#222429; --edge:#33363c;
+  --txt:#d9dbe0; --dim:#8a8f98; --accent:#ffb000;
+  --rec:#ff3030; --dub:#ffcc00; --play:#2fe05a; --wait:#ff8a00;
+  --lcd-bg:#b9c7a4; --lcd-fg:#1c2414;
+  font-size:clamp(14px, 0.95vw, 24px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:#0b0b0d;color:var(--txt);font-family:"Segoe UI",system-ui,sans-serif;user-select:none}
+body{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:1.2em 0}
+.device{width:min(96vw,105em);background:linear-gradient(#202227,#141518);border:1px solid #2b2e33;border-radius:1.2em;padding:1.2em 1.6em 1.6em;box-shadow:0 1em 3em #000a}
+/* ---------- top panel ---------- */
+.brandbar{display:flex;align-items:center;gap:1em;margin-bottom:.8em}
+.brandbar .stripe{flex:1;height:.35em;background:linear-gradient(90deg,transparent,var(--accent) 10%,var(--accent) 90%,transparent);border-radius:1em;opacity:.85}
+.brandbar .name{font-weight:800;letter-spacing:.25em;color:var(--accent);font-size:1.35em;white-space:nowrap}
+.brandbar .ver{color:var(--dim);font-size:.9em}
+.top{display:grid;grid-template-columns:auto auto 1fr auto auto;gap:1.4em;align-items:center}
+.fxblock{display:flex;align-items:center;gap:1.1em}
+.fxblock .ttl{color:var(--accent);font-weight:700;letter-spacing:.08em;font-size:1em;text-align:center;margin-top:.3em}
+.col{display:flex;flex-direction:column;align-items:center;gap:.45em}
+.lbl{font-size:.85em;color:var(--dim);letter-spacing:.06em;text-align:center;white-space:nowrap}
+.btn{cursor:pointer;border:2px solid #9aa0a8;background:#101114;color:#e8e8e8;border-radius:2em;padding:.45em 1.1em;font-weight:700;font-size:.95em;letter-spacing:.04em;line-height:1.1;text-align:center;transition:background .08s, box-shadow .08s}
+.btn:active,.btn.down{background:#2a2c31}
+.btn.small{padding:.35em .8em;font-size:.85em}
+.btn.on{border-color:var(--accent);box-shadow:0 0 .6em var(--accent);color:var(--accent)}
+.round{width:2.6em;height:2.6em;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center;font-size:1.05em}
+.menuBtns{display:flex;flex-direction:column;gap:.7em}
+/* knobs */
+.knob{position:relative;border-radius:50%;cursor:ns-resize;background:radial-gradient(circle at 40% 35%,#4a4d53,#1a1b1e 70%);border:2px solid #0a0a0b;box-shadow:0 .2em .5em #000c, inset 0 0 0 .25em #222428;touch-action:none}
+.knob::after{content:"";position:absolute;left:50%;top:8%;width:.22em;height:30%;background:#eee;border-radius:.2em;transform:translateX(-50%)}
+.knob .rot{position:absolute;inset:0}
+.knob.big{width:6.5em;height:6.5em}
+.knob.mid{width:3.6em;height:3.6em}
+.knob.sm{width:3em;height:3em}
+.knobwrap{display:flex;flex-direction:column;align-items:center;gap:.35em}
+.knobwrap .val{font-size:.85em;color:var(--txt);font-variant-numeric:tabular-nums;min-height:1.2em}
+/* LCD */
+.lcdwrap{background:#c9ccd1;padding:.45em;border-radius:.4em;justify-self:center;width:100%;max-width:34em}
+.lcd{background:var(--lcd-bg);color:var(--lcd-fg);font-family:Consolas,"Lucida Console",monospace;border-radius:.2em;padding:.6em .8em;height:11.5em;box-shadow:inset 0 0 .8em #0005;font-size:1em;line-height:1.3;overflow:hidden;position:relative}
+.lcd .row{display:flex;justify-content:space-between;white-space:pre}
+.lcd .hdr{font-weight:700;border-bottom:2px solid var(--lcd-fg);margin-bottom:.35em;padding-bottom:.1em}
+.lcd .trk{display:grid;grid-template-columns:repeat(5,1fr);gap:.4em;margin:.3em 0}
+.lcd .trk div{border:2px solid var(--lcd-fg);text-align:center;padding:.1em 0;font-weight:700;font-size:.92em}
+.lcd .trk div.inv{background:var(--lcd-fg);color:var(--lcd-bg)}
+.lcd .bar{height:.55em;border:2px solid var(--lcd-fg);margin:.35em 0;position:relative}
+.lcd .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--lcd-fg)}
+.lcd .knobs{display:grid;grid-template-columns:repeat(4,1fr);font-size:.85em;text-align:center;border-top:2px solid var(--lcd-fg);padding-top:.15em;position:absolute;left:.8em;right:.8em;bottom:.35em}
+.lcd .menu div{padding:0 .3em;cursor:pointer;display:flex;justify-content:space-between}
+.lcd .menu div.sel{background:var(--lcd-fg);color:var(--lcd-bg)}
+.lcd .popup{position:absolute;left:10%;right:10%;top:30%;background:var(--lcd-fg);color:var(--lcd-bg);text-align:center;padding:.5em;font-weight:700;border-radius:.2em}
+.meter{display:flex;gap:.3em;align-items:center;font-size:.8em}
+.meter span{display:inline-block;height:.5em;background:var(--lcd-fg)}
+.navgrid{display:grid;grid-template-columns:auto auto;gap:.6em .9em;align-items:center;justify-items:center}
+.rightTop{display:flex;align-items:center;gap:1.4em}
+/* second row */
+.row2{display:flex;justify-content:space-between;align-items:center;margin-top:1.1em;gap:.8em;flex-wrap:nowrap}
+.row2 .grp{display:flex;gap:.7em;align-items:center}
+.led{position:relative}
+.led.on{border-color:var(--accent);color:var(--accent);box-shadow:0 0 .7em var(--accent)}
+.led.blink{animation:blink .5s steps(1) infinite}
+@keyframes blink{50%{opacity:.35}}
+/* track strips */
+.tracks{display:grid;grid-template-columns:repeat(5,1fr);gap:.7em;margin-top:1.3em}
+.strip{background:linear-gradient(#25272c,#1a1b1f);border:1px solid var(--edge);border-radius:.8em;padding:1em .9em 1.1em;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto auto auto;gap:.6em .8em;position:relative}
+.strip.sel{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.strip.drag{outline:3px dashed var(--accent)}
+.strip .btns{display:flex;flex-direction:column;gap:.6em;align-items:flex-start}
+.strip .stopb{width:3.4em;height:3.4em;border-radius:50%;padding:0;display:flex;align-items:center;justify-content:center}
+.strip .stopb i{width:1em;height:1em;background:#eee;display:block}
+.strip .clr{font-size:.75em;color:var(--dim);letter-spacing:.05em}
+.fader{grid-row:1 / span 2;grid-column:2;width:3em;height:11em;position:relative;cursor:ns-resize;touch-action:none}
+.fader .slot{position:absolute;left:50%;top:.4em;bottom:.4em;width:.5em;transform:translateX(-50%);background:#050506;border-radius:.3em;border:1px solid #333}
+.fader .cap{position:absolute;left:0;right:0;height:1.4em;background:linear-gradient(#55585e,#2b2d31);border:1px solid #000;border-radius:.2em;transform:translateY(-50%)}
+.fader .cap::after{content:"";position:absolute;left:10%;right:10%;top:45%;height:.18em;background:#fff}
+.strip .num{font-size:2.2em;font-weight:800;color:#eee;line-height:1}
+.strip .info{grid-column:1 / span 2;display:flex;justify-content:space-between;font-size:.85em;color:var(--dim);min-height:1.2em}
+.strip .info b{color:var(--txt);font-weight:600}
+.pad{grid-column:1 / span 2;justify-self:center;width:10.5em;height:10.5em;border-radius:50%;position:relative;cursor:pointer;touch-action:none}
+.pad .ring{position:absolute;inset:0;border-radius:50%;background:#0c0c0d}
+.pad .face{position:absolute;inset:1.1em;border-radius:50%;background:radial-gradient(circle at 45% 35%,#34363b,#141517 70%);border:3px solid #000;display:flex;align-items:center;justify-content:center;box-shadow:0 .3em .6em #000c}
+.pad .face span{border:3px solid #ddd;border-radius:50%;width:65%;height:65%;display:flex;align-items:center;justify-content:center;font-size:1.6em;font-weight:800;color:#eee;letter-spacing:.05em}
+.pad:active .face{transform:scale(.97)}
+.pad .st{position:absolute;bottom:-1.5em;left:0;right:0;text-align:center;font-size:.85em;font-weight:700;letter-spacing:.1em}
+.help{width:min(96vw,105em);margin-top:1.4em;color:var(--dim);font-size:.95em;line-height:1.6}
+.help kbd{background:#222;border:1px solid #444;border-radius:.25em;padding:0 .35em;color:#ddd;font-family:inherit}
+.help b{color:var(--txt)}
+#power{position:fixed;inset:0;background:#000d;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1em;z-index:10}
+#power button{font-size:1.6em;padding:.7em 2em;border-radius:3em;border:3px solid var(--accent);background:#111;color:var(--accent);cursor:pointer;font-weight:800;letter-spacing:.15em}
+#power p{color:var(--dim);max-width:40em;text-align:center;font-size:1em}
+input[type=file]{display:none}
+</style>
+</head>
+<body>
+<div id="power">
+  <button id="powerBtn">⏻ POWER ON</button>
+  <p>Starts the audio engine and asks for microphone / audio-interface access.<br>
+  Use headphones while recording from a microphone, or the speakers will feed back into the loops.</p>
+</div>
+
+<div class="device">
+  <div class="brandbar"><span class="name">LOOP GIZMO</span><span class="ver">v1.0 · 5-track loop station</span><div class="stripe"></div></div>
+
+  <div class="top">
+    <!-- INPUT FX -->
+    <div class="fxblock">
+      <div class="knobwrap"><div class="knob big" id="kInFx"></div><div class="val" id="vInFx"></div></div>
+      <div class="col"><div class="btn small" id="inFxEdit">EDIT</div><div class="lbl">TYPE</div><div class="ttl">INPUT FX</div></div>
+    </div>
+    <div class="menuBtns">
+      <div class="btn" id="menuBtn">MENU</div>
+      <div class="btn" id="loopBtn">LOOP</div>
+    </div>
+    <div class="lcdwrap"><div class="lcd" id="lcd"></div></div>
+    <div class="rightTop">
+      <div class="navgrid">
+        <div class="lbl">EXIT</div><div class="lbl">ENTER</div>
+        <div class="btn round" id="exitBtn">✕</div><div class="btn round" id="enterBtn">●</div>
+        <div class="btn round" id="leftBtn">◀</div><div class="btn round" id="rightBtn">▶</div>
+      </div>
+      <div class="col">
+        <div class="lbl">OUTPUT LEVEL</div>
+        <div class="knobwrap"><div class="knob mid" id="kOut"></div><div class="val" id="vOut"></div></div>
+        <div class="btn small" id="rhyEdit">RHYTHM EDIT</div>
+      </div>
+    </div>
+    <!-- TRACK FX -->
+    <div class="fxblock">
+      <div class="col"><div class="btn small" id="trFxEdit">EDIT</div><div class="lbl">TYPE</div><div class="ttl">TRACK FX</div></div>
+      <div class="knobwrap"><div class="knob big" id="kTrFx"></div><div class="val" id="vTrFx"></div></div>
+    </div>
+  </div>
+
+  <div class="row2">
+    <div class="grp" id="inFxBanks"></div>
+    <div class="grp">
+      <div class="btn" id="allBtn">ALL<br>START/STOP</div>
+      <div class="btn" id="undoBtn">UNDO/<br>REDO</div>
+    </div>
+    <div class="grp" id="assignKnobs"></div>
+    <div class="grp">
+      <div class="btn led" id="tapBtn">TAP<br>TEMPO</div>
+      <div class="btn led" id="rhyBtn">RHYTHM<br>START/STOP</div>
+    </div>
+    <div class="grp" id="trFxBanks"></div>
+  </div>
+
+  <div class="tracks" id="tracks"></div>
+</div>
+
+<div class="help">
+  <b>Keys:</b> <kbd>1</kbd>–<kbd>5</kbd> rec/dub/play track ·
+  <kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd> <kbd>R</kbd> <kbd>T</kbd> stop track (hold 1 s = clear) ·
+  <kbd>Space</kbd> all start/stop · <kbd>Z</kbd> undo/redo · <kbd>B</kbd> rhythm start/stop · <kbd>G</kbd> tap tempo ·
+  <kbd>←</kbd> <kbd>→</kbd> / <kbd>↑</kbd> <kbd>↓</kbd> menu cursor · <kbd>Enter</kbd> enter · <kbd>Esc</kbd> exit.<br>
+  <b>Knobs/faders:</b> drag up/down or use the mouse wheel; double-click resets.
+  <b>Tracks:</b> drop an audio file on a track strip to load it; TRACK opens track settings (reverse, one-shot, pan, import/export).
+  The first recorded loop (or the rhythm, if running) sets the loop length; later tracks are synced to multiples of it.
+</div>
+<input type="file" id="fileIn" accept="audio/*">
+
+<script>
+"use strict";
+/* =====================================================================
+   AUDIO WORKLET — sample-accurate looper core (5 stereo tracks)
+   ===================================================================== */
+const WORKLET_SRC = `
+const mod=(a,b)=>((a%b)+b)%b;
+class Looper extends AudioWorkletProcessor{
+  constructor(){
+    super();
+    this.sr=sampleRate;
+    this.tracks=[];
+    for(let i=0;i<5;i++)this.tracks.push({state:'empty',L:0,origin:0,bL:null,bR:null,rec:null,undo:null,redo:null,reverse:false,oneShot:false,osPos:0});
+    this.master={M:0,anchor:0,src:'none'};
+    this.recAction='rdp'; this.quant=true; this.lat=0; this.rhythmOn=false;
+    this.last=-1; this.tick=0;
+    this.port.onmessage=e=>this.msg(e.data);
+  }
+  active(t){return t.state==='rec'||t.state==='dub'||t.state==='play'||t.state==='wait';}
+  anyActive(){return this.tracks.some(t=>this.active(t));}
+  hasContent(t){return t.L>0&&t.bL;}
+  postMaster(){this.port.postMessage({type:'master',master:{...this.master}});}
+  maybeReanchor(f){
+    if(this.master.M>0&&!this.anyActive()&&!this.rhythmOn){
+      this.master.anchor=f;
+      for(const t of this.tracks)if(this.hasContent(t))t.origin=f;
+      this.postMaster();
+    }
+  }
+  checkMasterReset(){
+    if(this.master.M>0&&!this.tracks.some(t=>this.hasContent(t)||t.state==='rec'||t.state==='wait')){
+      if(this.master.src==='track'||!this.rhythmOn){this.master={M:0,anchor:0,src:'none'};this.postMaster();}
+    }
+  }
+  snapshot(t){return t.bL?{bL:t.bL.slice(),bR:t.bR.slice(),L:t.L,origin:t.origin}:'empty';}
+  restore(t,s){
+    if(s==='empty'){t.bL=t.bR=null;t.L=0;t.state='empty';}
+    else{t.bL=s.bL;t.bR=s.bR;t.L=s.L;t.origin=s.origin;if(t.state==='empty'||t.state==='dub')t.state='play';
+      if(this.master.M===0){this.master={M:t.L,anchor:t.origin,src:'track'};this.postMaster();}}
+  }
+  startRec(k,f){
+    const t=this.tracks[k];
+    this.maybeReanchor(f);
+    t.undo='empty';t.redo=null;this.last=k;
+    const cap=this.sr*8;
+    t.rec={bL:new Float32Array(cap),bR:new Float32Array(cap),len:0,origin:f,lat:0,target:0,next:'play'};
+    const m=this.master;
+    if(m.M>0){
+      const ph=mod(f-m.anchor,m.M);
+      const cycleStart=f-ph;
+      t.rec.lat=this.lat;
+      if(!this.quant||ph===0){t.rec.origin=cycleStart;t.state='rec';}
+      else if(ph<m.M*0.12){t.rec.origin=cycleStart;t.state='rec';}
+      else{t.rec.origin=cycleStart+m.M;t.state='wait';}
+    }else t.state='rec';
+  }
+  endRec(k,f,next){
+    const t=this.tracks[k],r=t.rec,m=this.master;
+    r.next=next;
+    if(m.M>0){
+      if(t.state==='wait'){t.state='empty';t.rec=null;t.undo=null;this.checkMasterReset();return;}
+      const el=f-r.origin;
+      let n=Math.ceil(el/m.M); if(n<1)n=1;
+      if(el-(n-1)*m.M<m.M*0.12&&n>1)n--;
+      r.target=n*m.M;
+      if(f-r.origin>=r.target)this.finishRec(k);
+    }else{
+      r.target=f-r.origin;
+      this.finishRec(k);
+    }
+  }
+  finishRec(k){
+    const t=this.tracks[k],r=t.rec;
+    const L=r.target;
+    if(L<this.sr*0.1){t.state='empty';t.rec=null;t.undo=null;this.checkMasterReset();return;}
+    const bL=new Float32Array(L),bR=new Float32Array(L);
+    const n=Math.min(L,r.len);
+    bL.set(r.bL.subarray(0,n));bR.set(r.bR.subarray(0,n));
+    t.bL=bL;t.bR=bR;t.L=L;t.origin=r.origin;t.rec=null;
+    if(this.master.M===0){this.master={M:L,anchor:r.origin,src:'track'};this.postMaster();}
+    if(r.next==='dub'){t.undo=this.snapshot(t);t.redo=null;t.state='dub';}
+    else t.state=r.next;
+  }
+  stopTrack(k,f){
+    const t=this.tracks[k];
+    if(t.state==='rec'){ if(t.rec.target)t.rec.next='stop'; else this.endRec(k,f,'stop'); }
+    else if(t.state==='wait'){t.state='empty';t.rec=null;t.undo=null;this.checkMasterReset();}
+    else if(t.state==='dub'||t.state==='play')t.state='stop';
+  }
+  press(k,f){
+    const t=this.tracks[k];
+    switch(t.state){
+      case 'empty': this.startRec(k,f); break;
+      case 'wait': break;
+      case 'rec': if(!t.rec.target)this.endRec(k,f,this.recAction==='rdp'?'dub':'play'); else t.rec.next=this.recAction==='rdp'?'dub':'play'; break;
+      case 'dub': t.state='play'; break;
+      case 'play':
+        if(t.oneShot){t.osPos=0;break;}
+        t.undo=this.snapshot(t);t.redo=null;t.state='dub';this.last=k; break;
+      case 'stop': this.maybeReanchor(f); t.state='play'; t.osPos=0; break;
+    }
+  }
+  clear(k){
+    const t=this.tracks[k];
+    t.state='empty';t.bL=t.bR=null;t.L=0;t.rec=null;t.undo=null;t.redo=null;
+    this.checkMasterReset();
+  }
+  undoRedo(){
+    const k=this.last; if(k<0)return;
+    const t=this.tracks[k];
+    if(t.state==='rec'||t.state==='wait')return;
+    if(t.undo){const cur=this.snapshot(t);if(t.state==='dub')t.state='play';this.restore(t,t.undo);t.redo=cur;t.undo=null;}
+    else if(t.redo){const cur=this.snapshot(t);this.restore(t,t.redo);t.undo=cur;t.redo=null;}
+    this.checkMasterReset();
+  }
+  msg(d){
+    const f=currentFrame;
+    switch(d.type){
+      case 'press': this.press(d.k,f); break;
+      case 'stop': this.stopTrack(d.k,f); break;
+      case 'clear': this.clear(d.k); break;
+      case 'undo': this.undoRedo(); break;
+      case 'all':
+        if(this.anyActive()){for(let k=0;k<5;k++)this.stopTrack(k,f);}
+        else{let any=false;for(const t of this.tracks)if(this.hasContent(t)&&t.state==='stop'){any=true;}
+          if(any){this.maybeReanchor(f);for(const t of this.tracks)if(this.hasContent(t)&&t.state==='stop'){t.state='play';t.osPos=0;}}}
+        break;
+      case 'cfg': Object.assign(this,d.cfg); break;
+      case 'trackCfg': Object.assign(this.tracks[d.k],d.cfg); break;
+      case 'rhythm':
+        this.rhythmOn=d.on;
+        if(d.on){
+          if(this.master.M===0){this.master={M:d.barFrames,anchor:d.frame,src:'rhythm'};this.postMaster();}
+          else if(!this.anyActive()){this.master.anchor=d.frame;for(const t of this.tracks)if(this.hasContent(t))t.origin=d.frame;this.postMaster();}
+        }else this.checkMasterReset();
+        break;
+      case 'setMaster': this.master=d.master; this.postMaster(); break;
+      case 'import':{
+        const t=this.tracks[d.k];
+        t.undo=this.snapshot(t);t.redo=null;this.last=d.k;
+        let L=d.L.length;
+        if(this.master.M>0){L=Math.max(1,Math.round(L/this.master.M))*this.master.M;t.origin=this.master.anchor;}
+        else{t.origin=f;this.master={M:L,anchor:f,src:'track'};this.postMaster();}
+        const bL=new Float32Array(L),bR=new Float32Array(L);
+        bL.set(d.L.subarray(0,Math.min(L,d.L.length)));bR.set(d.R.subarray(0,Math.min(L,d.R.length)));
+        t.bL=bL;t.bR=bR;t.L=L;t.state='stop';t.rec=null;
+        break;}
+      case 'export':{
+        const t=this.tracks[d.k];
+        if(this.hasContent(t))this.port.postMessage({type:'export',k:d.k,L:t.bL.slice(),R:t.bR.slice(),reverse:t.reverse});
+        break;}
+    }
+    this.sendStatus();
+  }
+  sendStatus(){
+    this.port.postMessage({type:'status',frame:currentFrame,master:this.master,last:this.last,
+      tracks:this.tracks.map(t=>({state:t.state,L:t.L,origin:t.origin,reverse:t.reverse,oneShot:t.oneShot,osPos:t.osPos,
+        canUndo:!!t.undo,canRedo:!!t.redo,recOrigin:t.rec?t.rec.origin:0,recTarget:t.rec?t.rec.target:0,recNext:t.rec?t.rec.next:''}))});
+  }
+  process(inputs,outputs){
+    const inp=inputs[0]||[];
+    const inL=inp[0]||null,inR=inp[1]||inL;
+    const n=outputs[0][0].length,f0=currentFrame;
+    for(let k=0;k<5;k++){
+      const t=this.tracks[k],out=outputs[k],oL=out[0],oR=out[1]||out[0];
+      if(t.state==='empty'||t.state==='stop')continue;
+      for(let i=0;i<n;i++){
+        const f=f0+i;
+        if(t.state==='wait'){ if(f>=t.rec.origin)t.state='rec'; else continue; }
+        if(t.state==='rec'){
+          const r=t.rec;
+          if(r.target&&f-r.origin>=r.target){this.finishRec(k);if(t.state!=='play'&&t.state!=='dub')break;}
+          else{
+            const idx=f-r.origin-r.lat;
+            if(idx>=0&&inL){
+              if(idx>=r.bL.length){const c=Math.max(idx+1,r.bL.length*2);const a=new Float32Array(c),b=new Float32Array(c);a.set(r.bL);b.set(r.bR);r.bL=a;r.bR=b;}
+              r.bL[idx]=inL[i];r.bR[idx]=inR[i];if(idx+1>r.len)r.len=idx+1;
+            }
+            continue;
+          }
+        }
+        if(t.state==='play'||t.state==='dub'){
+          const L=t.L;
+          if(f<t.origin&&!t.oneShot)continue;
+          let p;
+          if(t.oneShot){ if(t.osPos>=L){t.state='stop';break;} p=t.osPos++; }
+          else p=mod(f-t.origin,L);
+          if(t.reverse)p=L-1-p;
+          oL[i]=t.bL[p];oR[i]=t.bR[p];
+          if(t.state==='dub'&&inL){
+            let q=mod(f-t.origin-this.lat,L); if(t.reverse)q=L-1-q;
+            t.bL[q]+=inL[i];t.bR[q]+=inR[i];
+          }
+        }
+      }
+    }
+    if(++this.tick>=6){this.tick=0;this.sendStatus();}
+    return true;
+  }
+}
+registerProcessor('looper',Looper);
+`;
+
+/* =====================================================================
+   MAIN THREAD
+   ===================================================================== */
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const mod=(a,b)=>((a%b)+b)%b;
+let ctx=null, node=null, sr=48000;
+let st={frame:0,master:{M:0,anchor:0,src:'none'},last:-1,tracks:[...Array(5)].map(()=>({state:'empty',L:0}))};
+let micStream=null, micSrc=null, micStatus='MIC OFF';
+
+const S={ // settings / UI state
+  tempo:120, recAction:'rdp', quant:true, latMode:'AUTO', monitor:false,
+  outLevel:0.8, inLevel:0.8, rhyLevel:0.6, pattern:0,
+  rhythmOn:false, bars:1,
+  inFx:{on:false,bank:0,types:['REVERB','DELAY','RING MOD','LO-FI'],amt:[0.4,0.4,0.5,0.5]},
+  trFx:{bank:0,types:['FILTER','DELAY','REVERB','LO-FI'],amt:[0.5,0.4,0.4,0.5]},
+  tracks:[...Array(5)].map(()=>({level:0.8,pan:0.5,fx:false,reverse:false,oneShot:false})),
+  sel:0, page:'main', cursor:0, popup:null, popupT:0
+};
+const FX_TYPES=['FILTER','DELAY','REVERB','LO-FI','RING MOD'];
+
+/* ---------------- Rhythm patterns (16 steps) ---------------- */
+const PATTERNS=[
+  {name:'ROCK',   k:'x.......x.x.....', s:'....x.......x...', h:'x.x.x.x.x.x.x.x.', o:'................'},
+  {name:'POP',    k:'x.....x.x.......', s:'....x.......x...', h:'xxxxxxxxxxxxxxxx', o:'................'},
+  {name:'FUNK',   k:'x..x..x...x..x..', s:'....x..x.x..x...', h:'x.xxx.x.x.xxx.x.', o:'..............x.'},
+  {name:'SHUFFLE',k:'x.....x.x.......', s:'....x.......x...', h:'x.x.x.x.x.x.x.x.', o:'................', swing:0.33},
+  {name:'HIPHOP', k:'x......xx.x.....', s:'....x.......x...', h:'x.x.x.x.x.x.x.xx', o:'................', swing:0.15},
+  {name:'4 FLOOR',k:'x...x...x...x...', s:'....x.......x...', h:'................', o:'..x...x...x...x.'},
+  {name:'METRO',  k:'................', s:'................', h:'................', o:'................', metro:true},
+];
+
+/* ---------------- Audio graph ---------------- */
+let master, outGain, limiter, inGain, inFxSlot, inBus, monGain, rhyGain, analyser, inAnalyser, noiseBuf, irBuf;
+const trackNodes=[];
+
+async function powerOn(){
+  ctx=new (window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive'});
+  sr=ctx.sampleRate;
+  // blob: URLs are refused on file:// pages in Chromium, so fall back to a data: URL
+  try{ await ctx.audioWorklet.addModule(URL.createObjectURL(new Blob([WORKLET_SRC],{type:'application/javascript'}))); }
+  catch(e){ await ctx.audioWorklet.addModule('data:application/javascript;base64,'+btoa(unescape(encodeURIComponent(WORKLET_SRC)))); }
+  node=new AudioWorkletNode(ctx,'looper',{numberOfInputs:1,numberOfOutputs:5,outputChannelCount:[2,2,2,2,2],channelCount:2,channelCountMode:'explicit',channelInterpretation:'speakers'});
+  node.port.onmessage=e=>onWorklet(e.data);
+
+  outGain=ctx.createGain(); outGain.gain.value=S.outLevel;
+  limiter=ctx.createDynamicsCompressor(); limiter.threshold.value=-3; limiter.ratio.value=20; limiter.attack.value=0.002; limiter.release.value=0.1;
+  master=ctx.createGain();
+  analyser=ctx.createAnalyser(); analyser.fftSize=1024;
+  master.connect(outGain); outGain.connect(limiter); limiter.connect(ctx.destination); limiter.connect(analyser);
+
+  // shared buffers
+  noiseBuf=ctx.createBuffer(1,sr*1,sr); {const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;}
+  irBuf=ctx.createBuffer(2,Math.floor(sr*2.4),sr);
+  for(let c=0;c<2;c++){const d=irBuf.getChannelData(c);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3.2);}
+
+  // input chain: mic -> inGain -> [inFx] -> inBus -> worklet ; inBus -> monitor -> master
+  inGain=ctx.createGain(); inGain.gain.value=S.inLevel*1.25;
+  inBus=ctx.createGain();
+  monGain=ctx.createGain(); monGain.gain.value=S.monitor?1:0;
+  inAnalyser=ctx.createAnalyser(); inAnalyser.fftSize=1024;
+  inBus.connect(node); inBus.connect(monGain); monGain.connect(master); inBus.connect(inAnalyser);
+  rebuildInFx();
+
+  // tracks: worklet out k -> trackIn -> [fx] -> fader -> panner -> master
+  for(let k=0;k<5;k++){
+    const tin=ctx.createGain(), fader=ctx.createGain(), pan=ctx.createStereoPanner();
+    fader.gain.value=faderCurve(S.tracks[k].level); pan.pan.value=S.tracks[k].pan*2-1;
+    node.connect(tin,k,0); fader.connect(pan); pan.connect(master);
+    trackNodes[k]={tin,fader,pan,fx:null};
+    rebuildTrackFx(k);
+  }
+  rhyGain=ctx.createGain(); rhyGain.gain.value=S.rhyLevel; rhyGain.connect(master);
+
+  sendCfg();
+  await connectMic();
+  setInterval(scheduler,25);
+  $('power').style.display='none';
+  requestAnimationFrame(frame);
+}
+
+async function connectMic(){
+  try{
+    micStream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:false,channelCount:2}});
+    micSrc=ctx.createMediaStreamSource(micStream); micSrc.connect(inGain);
+    const tr=micStream.getAudioTracks()[0]; micStatus='MIC: '+(tr&&tr.label?tr.label.slice(0,18):'ON');
+  }catch(e){ micStatus='MIC N/A'; popup('NO MIC ACCESS'); }
+}
+function disconnectMic(){
+  if(micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null;}
+  if(micSrc){micSrc.disconnect();micSrc=null;}
+  micStatus='MIC OFF';
+}
+const faderCurve=v=>v<=0?0:Math.pow(v,2)*1.6;
+
+function latencySamples(){
+  if(S.latMode==='AUTO'){
+    const s=(ctx.baseLatency||0)+(ctx.outputLatency||0)+0.008;
+    return Math.round(s*sr);
+  }
+  return Math.round(S.latMode/1000*sr);
+}
+function sendCfg(){
+  if(!node)return;
+  node.port.postMessage({type:'cfg',cfg:{recAction:S.recAction,quant:S.quant,lat:latencySamples()}});
+}
+function post(m){ if(node)node.port.postMessage(m); }
+
+/* ---------------- FX factory ---------------- */
+function makeFx(type){
+  const input=ctx.createGain(), output=ctx.createGain();
+  const fx={type,input,output,nodes:[],set(){} };
+  const dry=ctx.createGain(), wet=ctx.createGain();
+  input.connect(dry); dry.connect(output); wet.connect(output);
+  const beat=()=>60/currentTempo();
+  if(type==='FILTER'){
+    input.disconnect(); const f=ctx.createBiquadFilter(); f.type='lowpass'; f.Q.value=7;
+    input.connect(f); f.connect(output);
+    fx.set=a=>{f.frequency.setTargetAtTime(18000*Math.pow(0.006,a),ctx.currentTime,0.02);};
+  }else if(type==='DELAY'){
+    const d=ctx.createDelay(4), fb=ctx.createGain(), lp=ctx.createBiquadFilter(); lp.frequency.value=4500;
+    d.delayTime.value=beat()*0.75; fb.gain.value=0.45;
+    input.connect(d); d.connect(lp); lp.connect(fb); fb.connect(d); lp.connect(wet);
+    fx.set=a=>{wet.gain.value=a; d.delayTime.setTargetAtTime(beat()*0.75,ctx.currentTime,0.05); fb.gain.value=0.25+a*0.4;};
+  }else if(type==='REVERB'){
+    const c=ctx.createConvolver(); c.buffer=irBuf; input.connect(c); c.connect(wet);
+    fx.set=a=>{wet.gain.value=a*1.4; dry.gain.value=1-a*0.4;};
+  }else if(type==='LO-FI'){
+    input.disconnect(); const ws=ctx.createWaveShaper(), lp=ctx.createBiquadFilter();
+    input.connect(ws); ws.connect(lp); lp.connect(output);
+    fx.set=a=>{const bits=Math.round(16-a*13), q=Math.pow(2,bits-1), c=new Float32Array(4096);
+      for(let i=0;i<c.length;i++){const x=i/(c.length-1)*2-1;c[i]=Math.round(x*q)/q;} ws.curve=c;
+      lp.frequency.setTargetAtTime(12000*Math.pow(0.2,a),ctx.currentTime,0.02);};
+  }else if(type==='RING MOD'){
+    const g=ctx.createGain(); g.gain.value=0; const o=ctx.createOscillator(); o.type='sine'; o.start();
+    o.connect(g.gain); input.connect(g); g.connect(wet); wet.gain.value=1; dry.gain.value=0.15;
+    fx.nodes.push(o);
+    fx.set=a=>{o.frequency.setTargetAtTime(30+a*900,ctx.currentTime,0.02);};
+  }
+  fx.dispose=()=>{try{input.disconnect();output.disconnect();fx.nodes.forEach(n=>{n.stop&&n.stop();n.disconnect();});}catch(e){}};
+  return fx;
+}
+function rebuildInFx(){
+  if(!ctx)return;
+  inGain.disconnect();
+  if(inFxSlot){inFxSlot.dispose();inFxSlot=null;}
+  if(S.inFx.on){
+    inFxSlot=makeFx(S.inFx.types[S.inFx.bank]); inFxSlot.set(S.inFx.amt[S.inFx.bank]);
+    inGain.connect(inFxSlot.input); inFxSlot.output.connect(inBus);
+  }else inGain.connect(inBus);
+}
+function rebuildTrackFx(k){
+  if(!ctx)return;
+  const n=trackNodes[k]; n.tin.disconnect();
+  if(n.fx){n.fx.dispose();n.fx=null;}
+  if(S.tracks[k].fx){
+    n.fx=makeFx(S.trFx.types[S.trFx.bank]); n.fx.set(S.trFx.amt[S.trFx.bank]);
+    n.tin.connect(n.fx.input); n.fx.output.connect(n.fader);
+  }else n.tin.connect(n.fader);
+}
+function rebuildAllTrackFx(){for(let k=0;k<5;k++)rebuildTrackFx(k);}
+
+/* ---------------- Tempo / rhythm ---------------- */
+function hasContent(){return st.tracks.some(t=>t.L>0||t.state==='rec'||t.state==='wait');}
+function currentTempo(){
+  const m=st.master;
+  if(m.M>0){return 60*4*S.bars/(m.M/sr);}
+  return S.tempo;
+}
+function barsFor(M){ // choose bar count so tempo lands in a musical range
+  const sec=M/sr; let n=1;
+  while(60*4*n/sec<75&&n<64)n++;
+  return n;
+}
+function setTempo(bpm){
+  bpm=clamp(Math.round(bpm*10)/10,40,250);
+  if(st.master.M>0&&(hasContent()||st.master.src==='track')){popup('TEMPO LOCKED');return;}
+  S.tempo=bpm;
+  if(st.master.M>0&&st.master.src==='rhythm'){
+    post({type:'setMaster',master:{M:Math.round(sr*60*4/bpm),anchor:st.master.anchor,src:'rhythm'}});
+  }
+}
+let rhy={lastT:0,startT:0,beatFlash:0};
+function rhythmToggle(force){
+  const on=force!==undefined?force:!S.rhythmOn;
+  if(!ctx)return;
+  S.rhythmOn=on;
+  if(on){
+    const t=ctx.currentTime+0.06;
+    rhy.startT=t; rhy.lastT=t-0.001;
+    post({type:'rhythm',on:true,frame:Math.round(t*sr),barFrames:Math.round(sr*60*4/S.tempo)});
+  }else post({type:'rhythm',on:false});
+}
+function scheduler(){
+  if(!ctx||!S.rhythmOn)return;
+  const m=st.master; if(!m.M)return;
+  const stepSec=m.M/(16*S.bars)/sr, anchorT=m.anchor/sr;
+  const now=ctx.currentTime, until=now+0.15;
+  const pat=PATTERNS[S.pattern];
+  let from=Math.max(now,rhy.lastT+1e-4,rhy.startT-1e-4);
+  let k=Math.ceil((from-anchorT)/stepSec-1e-6);
+  for(;anchorT+k*stepSec<until;k++){
+    let t=anchorT+k*stepSec;
+    if(t<from-1e-6)continue;
+    const s=mod(k,16);
+    if(pat.swing&&s%4===2)t+=stepSec*pat.swing*2;
+    playStep(pat,s,t,mod(k,16*S.bars));
+    rhy.lastT=anchorT+k*stepSec;
+  }
+}
+function playStep(p,s,t,kk){
+  if(p.metro){ if(s%4===0)click(t,kk===0?1600:1000); return; }
+  if(p.k[s]==='x')kick(t);
+  if(p.s[s]==='x')snare(t);
+  if(p.h[s]==='x')hat(t,0.05,s%4===0?0.35:0.22);
+  if(p.o[s]==='x')hat(t,0.3,0.25);
+}
+function env(g,t,peak,dec){g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(peak,t+0.002);g.gain.exponentialRampToValueAtTime(0.0001,t+dec);}
+function kick(t){const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(42,t+0.12);env(g,t,0.9,0.45);o.connect(g);g.connect(rhyGain);o.start(t);o.stop(t+0.5);}
+function snare(t){const n=ctx.createBufferSource();n.buffer=noiseBuf;const f=ctx.createBiquadFilter();f.type='highpass';f.frequency.value=1400;const g=ctx.createGain();env(g,t,0.45,0.18);n.connect(f);f.connect(g);g.connect(rhyGain);n.start(t);n.stop(t+0.25);
+  const o=ctx.createOscillator(),g2=ctx.createGain();o.frequency.value=190;env(g2,t,0.35,0.09);o.connect(g2);g2.connect(rhyGain);o.start(t);o.stop(t+0.12);}
+function hat(t,dec,vol){const n=ctx.createBufferSource();n.buffer=noiseBuf;n.playbackRate.value=1+Math.random()*0.05;const f=ctx.createBiquadFilter();f.type='highpass';f.frequency.value=7500;const g=ctx.createGain();env(g,t,vol,dec);n.connect(f);f.connect(g);g.connect(rhyGain);n.start(t);n.stop(t+dec+0.05);}
+function click(t,fr){const o=ctx.createOscillator(),g=ctx.createGain();o.type='square';o.frequency.value=fr;env(g,t,0.3,0.04);o.connect(g);g.connect(rhyGain);o.start(t);o.stop(t+0.06);}
+
+let taps=[];
+function tap(){
+  const now=performance.now()/1000;
+  taps=taps.filter(x=>now-x<2.5); taps.push(now);
+  if(taps.length>=2){const d=(taps[taps.length-1]-taps[0])/(taps.length-1);setTempo(60/d);}
+  flash($('tapBtn'));
+}
+
+/* ---------------- Worklet messages ---------------- */
+let prevMasterM=0;
+function onWorklet(d){
+  if(d.type==='status'){st=d;}
+  else if(d.type==='master'){
+    st.master=d.master;
+    if(d.master.M>0&&d.master.src==='track'&&prevMasterM===0)S.bars=barsFor(d.master.M);
+    if(d.master.src==='rhythm')S.bars=1;
+    if(d.master.M===0&&S.rhythmOn){ // tracks cleared while rhythm runs: keep rhythm grid
+      post({type:'setMaster',master:{M:Math.round(sr*60*4/S.tempo),anchor:Math.round(ctx.currentTime*sr+0.05*sr),src:'rhythm'}});
+      S.bars=1; rhy.lastT=ctx.currentTime;
+    }
+    if(d.master.M>0&&d.master.src==='track')S.tempo=Math.round(currentTempo()*10)/10;
+    prevMasterM=d.master.M;
+  }else if(d.type==='export'){
+    exportWav(d.L,d.R,d.reverse,'loop-gizmo-track'+(d.k+1)+'.wav');
+  }
+}
+
+/* ---------------- Actions ---------------- */
+function trackPress(k){ if(!ctx)return; S.sel=k; post({type:'press',k}); }
+function trackStop(k){ if(!ctx)return; post({type:'stop',k}); }
+function trackClear(k){ if(!ctx)return; post({type:'clear',k}); popup('TRACK '+(k+1)+' CLEARED'); }
+function allStartStop(){
+  if(!ctx)return;
+  const anyActive=st.tracks.some(t=>['rec','dub','play','wait'].includes(t.state));
+  if(anyActive){ S.rhyWas=S.rhythmOn; if(S.rhythmOn)rhythmToggle(false); }
+  else if(S.rhyWas&&!S.rhythmOn){ rhythmToggle(true); }
+  post({type:'all'});
+}
+function undoRedo(){ if(!ctx)return; post({type:'undo'}); const t=st.tracks[st.last]; if(t)popup(t.canUndo?'UNDO TRACK '+(st.last+1):t.canRedo?'REDO TRACK '+(st.last+1):'NOTHING TO UNDO'); }
+function setTrackCfg(k){ const t=S.tracks[k]; post({type:'trackCfg',k,cfg:{reverse:t.reverse,oneShot:t.oneShot}}); }
+
+async function importFile(k,file){
+  if(!ctx)return;
+  try{
+    popup('LOADING…');
+    const buf=await ctx.decodeAudioData(await file.arrayBuffer());
+    const L=buf.getChannelData(0).slice(), R=(buf.numberOfChannels>1?buf.getChannelData(1):buf.getChannelData(0)).slice();
+    node.port.postMessage({type:'import',k,L,R},[L.buffer,R.buffer]);
+    popup('LOADED → TRACK '+(k+1));
+  }catch(e){popup('CANNOT DECODE FILE');}
+}
+function exportWav(L,R,rev,name){
+  if(rev){L.reverse();R.reverse();}
+  const n=L.length, b=new ArrayBuffer(44+n*4), v=new DataView(b);
+  const ws=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
+  ws(0,'RIFF');v.setUint32(4,36+n*4,true);ws(8,'WAVE');ws(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,2,true);
+  v.setUint32(24,sr,true);v.setUint32(28,sr*4,true);v.setUint16(32,4,true);v.setUint16(34,16,true);ws(36,'data');v.setUint32(40,n*4,true);
+  let o=44;for(let i=0;i<n;i++){v.setInt16(o,clamp(L[i],-1,1)*32767,true);v.setInt16(o+2,clamp(R[i],-1,1)*32767,true);o+=4;}
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([b],{type:'audio/wav'}));a.download=name;document.body.appendChild(a);a.click();a.remove();
+  popup('EXPORTED '+name.replace('loop-gizmo-',''));
+}
+
+/* ---------------- Controls: knobs & faders ---------------- */
+function makeKnob(el,get,set,def,fmt,valEl){
+  const draw=()=>{const v=get();el.style.transform='rotate('+(-135+v*270)+'deg)';if(valEl)valEl.textContent=fmt(v);};
+  let y0=0,v0=0,drag=false;
+  el.addEventListener('pointerdown',e=>{drag=true;y0=e.clientY;v0=get();el.setPointerCapture(e.pointerId);});
+  el.addEventListener('pointermove',e=>{if(!drag)return;const sens=e.shiftKey?0.001:0.005;set(clamp(v0+(y0-e.clientY)*sens,0,1));draw();});
+  el.addEventListener('pointerup',()=>drag=false);
+  el.addEventListener('wheel',e=>{e.preventDefault();set(clamp(get()-Math.sign(e.deltaY)*0.02,0,1));draw();},{passive:false});
+  el.addEventListener('dblclick',()=>{set(def);draw();});
+  el._draw=draw; draw(); return el;
+}
+function makeFader(el,get,set,def){
+  el.innerHTML='<div class="slot"></div><div class="cap"></div>';
+  const cap=el.querySelector('.cap');
+  const draw=()=>{cap.style.top=(8+(1-get())*84)+'%';};
+  const fromY=y=>{const r=el.getBoundingClientRect();return clamp(1-((y-r.top)/r.height-0.08)/0.84,0,1);};
+  let drag=false;
+  el.addEventListener('pointerdown',e=>{drag=true;el.setPointerCapture(e.pointerId);set(fromY(e.clientY));draw();});
+  el.addEventListener('pointermove',e=>{if(drag){set(fromY(e.clientY));draw();}});
+  el.addEventListener('pointerup',()=>drag=false);
+  el.addEventListener('wheel',e=>{e.preventDefault();set(clamp(get()-Math.sign(e.deltaY)*0.03,0,1));draw();},{passive:false});
+  el.addEventListener('dblclick',()=>{set(def);draw();});
+  el._draw=draw; draw();
+}
+function flash(el){el.classList.add('down');setTimeout(()=>el.classList.remove('down'),90);}
+function popup(text){S.popup=text;S.popupT=performance.now()+1300;}
+
+/* ---------------- Build UI ---------------- */
+const BANKS='ABCD';
+function buildBanks(container,isInput){
+  for(let i=0;i<4;i++){
+    const b=document.createElement('div');b.className='btn round led';b.textContent=BANKS[i];
+    b.onclick=()=>{
+      if(isInput){ if(S.inFx.on&&S.inFx.bank===i)S.inFx.on=false; else{S.inFx.on=true;S.inFx.bank=i;} rebuildInFx(); kInFx._draw();
+        popup('INPUT FX '+(S.inFx.on?BANKS[i]+': '+S.inFx.types[i]:'OFF')); }
+      else { S.trFx.bank=i; rebuildAllTrackFx(); kTrFx._draw(); popup('TRACK FX '+BANKS[i]+': '+S.trFx.types[i]); }
+    };
+    b.dataset.i=i; container.appendChild(b);
+  }
+}
+buildBanks($('inFxBanks'),true); buildBanks($('trFxBanks'),false);
+
+const kInFx=makeKnob($('kInFx'),()=>S.inFx.amt[S.inFx.bank],v=>{S.inFx.amt[S.inFx.bank]=v;if(inFxSlot)inFxSlot.set(v);},0.5,v=>Math.round(v*100)+'%',$('vInFx'));
+const kTrFx=makeKnob($('kTrFx'),()=>S.trFx.amt[S.trFx.bank],v=>{S.trFx.amt[S.trFx.bank]=v;trackNodes.forEach(n=>n&&n.fx&&n.fx.set(v));},0.5,v=>Math.round(v*100)+'%',$('vTrFx'));
+makeKnob($('kOut'),()=>S.outLevel,v=>{S.outLevel=v;if(outGain)outGain.gain.setTargetAtTime(v,ctx.currentTime,0.02);},0.8,v=>Math.round(v*100),$('vOut'));
+$('inFxEdit').onclick=()=>{const b=S.inFx.bank;S.inFx.types[b]=FX_TYPES[(FX_TYPES.indexOf(S.inFx.types[b])+1)%FX_TYPES.length];rebuildInFx();popup('INPUT FX '+BANKS[b]+': '+S.inFx.types[b]);};
+$('trFxEdit').onclick=()=>{const b=S.trFx.bank;S.trFx.types[b]=FX_TYPES[(FX_TYPES.indexOf(S.trFx.types[b])+1)%FX_TYPES.length];rebuildAllTrackFx();popup('TRACK FX '+BANKS[b]+': '+S.trFx.types[b]);};
+
+// assignable knobs: TEMPO, RHYTHM LEVEL, INPUT LEVEL, PAN (selected track)
+const ASSIGN=[
+  {name:'TEMPO', get:()=>(currentTempo()-40)/210, set:v=>setTempo(40+v*210), def:(120-40)/210},
+  {name:'RHY.LV',get:()=>S.rhyLevel, set:v=>{S.rhyLevel=v;if(rhyGain)rhyGain.gain.value=v;}, def:0.6},
+  {name:'IN.LV', get:()=>S.inLevel,  set:v=>{S.inLevel=v;if(inGain)inGain.gain.value=v*1.25;}, def:0.8},
+  {name:'PAN',   get:()=>S.tracks[S.sel].pan, set:v=>{S.tracks[S.sel].pan=v;if(trackNodes[S.sel])trackNodes[S.sel].pan.pan.value=v*2-1;}, def:0.5},
+];
+const assignKnobs=ASSIGN.map(a=>{
+  const w=document.createElement('div');w.className='knobwrap';const k=document.createElement('div');k.className='knob mid';w.appendChild(k);
+  const l=document.createElement('div');l.className='lbl';w.appendChild(l);
+  $('assignKnobs').appendChild(w); return makeKnob(k,a.get,a.set,a.def,()=>a.name==='PAN'?'PAN '+(S.sel+1):a.name,l);
+});
+
+// track strips
+const strips=[];
+for(let k=0;k<5;k++){
+  const s=document.createElement('div');s.className='strip';
+  s.innerHTML=`<div class="btns">
+      <div class="btn small fxb">FX</div>
+      <div class="btn small trb">TRACK</div>
+      <div class="clr">CLEAR: HOLD</div>
+      <div class="btn stopb"><i></i></div>
+    </div>
+    <div class="fader"></div>
+    <div class="info"><span class="num">${k+1}</span><span class="len"></span></div>
+    <div class="pad"><div class="ring"></div><div class="face"><span>▶/●</span></div><div class="st"></div></div>`;
+  $('tracks').appendChild(s);
+  const o={el:s,ring:s.querySelector('.ring'),stEl:s.querySelector('.st'),len:s.querySelector('.len'),fxb:s.querySelector('.fxb'),trb:s.querySelector('.trb'),fader:s.querySelector('.fader')};
+  strips.push(o);
+  s.querySelector('.pad').addEventListener('pointerdown',e=>{e.preventDefault();trackPress(k);});
+  holdButton(s.querySelector('.stopb'),()=>trackStop(k),()=>trackClear(k));
+  o.fxb.onclick=()=>{S.tracks[k].fx=!S.tracks[k].fx;rebuildTrackFx(k);};
+  o.trb.onclick=()=>{S.sel=k;openPage('track');};
+  makeFader(o.fader,()=>S.tracks[k].level,v=>{S.tracks[k].level=v;if(trackNodes[k])trackNodes[k].fader.gain.setTargetAtTime(faderCurve(v),ctx.currentTime,0.01);},0.8);
+  s.addEventListener('dragover',e=>{e.preventDefault();s.classList.add('drag');});
+  s.addEventListener('dragleave',()=>s.classList.remove('drag'));
+  s.addEventListener('drop',e=>{e.preventDefault();s.classList.remove('drag');const f=e.dataTransfer.files[0];if(f)importFile(k,f);});
+}
+function holdButton(el,onPress,onHold,ms=1000){
+  let tm=null;
+  const down=()=>{el.classList.add('down');onPress();tm=setTimeout(()=>{tm=null;onHold();},ms);};
+  const up=()=>{el.classList.remove('down');if(tm){clearTimeout(tm);tm=null;}};
+  el.addEventListener('pointerdown',e=>{e.preventDefault();down();});
+  el.addEventListener('pointerup',up); el.addEventListener('pointerleave',up);
+  return {down,up};
+}
+
+$('allBtn').onclick=allStartStop;
+$('undoBtn').onclick=undoRedo;
+$('tapBtn').onclick=tap;
+$('rhyBtn').onclick=()=>rhythmToggle();
+$('rhyEdit').onclick=()=>{S.pattern=(S.pattern+1)%PATTERNS.length;popup('RHYTHM: '+PATTERNS[S.pattern].name);};
+$('powerBtn').onclick=()=>powerOn().catch(e=>{$('power').querySelector('p').textContent='Audio engine failed: '+e.message;});
+
+/* ---------------- LCD menus ---------------- */
+const LAT_OPTS=['AUTO',0,5,10,15,20,25,30,40,50,60,80,100];
+const cyc=(arr,v,d)=>arr[mod(arr.indexOf(v)+d,arr.length)];
+const PAGES={
+  loop:{title:'LOOP SETTINGS',items:[
+    {l:'REC ACTION',v:()=>S.recAction==='rdp'?'REC→DUB→PLAY':'REC→PLAY→DUB',a:()=>{S.recAction=S.recAction==='rdp'?'rpd':'rdp';sendCfg();}},
+    {l:'REC QUANTIZE',v:()=>S.quant?'MEASURE':'OFF',a:()=>{S.quant=!S.quant;sendCfg();}},
+    {l:'LATENCY COMP',v:()=>S.latMode==='AUTO'?'AUTO ('+Math.round(latencySamples()/sr*1000)+'ms)':S.latMode+' ms',a:d=>{S.latMode=cyc(LAT_OPTS,S.latMode,d);sendCfg();}},
+    {l:'LOOP LENGTH',v:()=>st.master.M?(st.master.M/sr).toFixed(2)+'s / '+S.bars+' BAR':'—',a:()=>{}},
+  ]},
+  menu:{title:'SYSTEM MENU',items:[
+    {l:'INPUT MONITOR',v:()=>S.monitor?'ON':'OFF',a:()=>{S.monitor=!S.monitor;if(monGain)monGain.gain.value=S.monitor?1:0;}},
+    {l:'MICROPHONE',v:()=>micStatus,a:()=>{if(micStream)disconnectMic();else connectMic();}},
+    {l:'RHYTHM PATTERN',v:()=>PATTERNS[S.pattern].name,a:d=>{S.pattern=mod(S.pattern+d,PATTERNS.length);}},
+    {l:'RHYTHM TEMPO',v:()=>currentTempo().toFixed(1),a:d=>setTempo(S.tempo+d)},
+  ]},
+  track:{title:()=>'TRACK '+(S.sel+1),items:[
+    {l:'REVERSE',v:()=>S.tracks[S.sel].reverse?'ON':'OFF',a:()=>{S.tracks[S.sel].reverse=!S.tracks[S.sel].reverse;setTrackCfg(S.sel);}},
+    {l:'ONE SHOT',v:()=>S.tracks[S.sel].oneShot?'ON':'OFF',a:()=>{S.tracks[S.sel].oneShot=!S.tracks[S.sel].oneShot;setTrackCfg(S.sel);}},
+    {l:'TRACK FX',v:()=>S.tracks[S.sel].fx?'ON':'OFF',a:()=>{S.tracks[S.sel].fx=!S.tracks[S.sel].fx;rebuildTrackFx(S.sel);}},
+    {l:'PAN (KNOB 4)',v:()=>{const p=Math.round((S.tracks[S.sel].pan-0.5)*100);return p===0?'C':p<0?'L'+(-p):'R'+p;},a:d=>{const t=S.tracks[S.sel];t.pan=clamp(t.pan+d*0.05,0,1);if(trackNodes[S.sel])trackNodes[S.sel].pan.pan.value=t.pan*2-1;}},
+    {l:'IMPORT AUDIO…',v:()=>'',a:()=>{$('fileIn').click();}},
+    {l:'EXPORT WAV',v:()=>st.tracks[S.sel].L?'':'(EMPTY)',a:()=>post({type:'export',k:S.sel})},
+  ]},
+};
+$('fileIn').onchange=e=>{const f=e.target.files[0];if(f)importFile(S.sel,f);e.target.value='';};
+function openPage(p){ if(S.page===p&&p!=='track'){S.page='main';return;} S.page=p;S.cursor=0; }
+$('menuBtn').onclick=()=>openPage('menu');
+$('loopBtn').onclick=()=>openPage('loop');
+$('exitBtn').onclick=()=>{S.page='main';};
+$('enterBtn').onclick=()=>enter(1);
+$('leftBtn').onclick=()=>nav(-1);
+$('rightBtn').onclick=()=>nav(1);
+function nav(d){
+  if(S.page==='main'){S.sel=mod(S.sel+d,5);return;}
+  S.cursor=mod(S.cursor+d,PAGES[S.page].items.length);
+}
+function enter(d){
+  if(S.page==='main'){openPage('track');return;}
+  PAGES[S.page].items[S.cursor].a(d);
+}
+
+/* ---------------- Render ---------------- */
+const STATE_TXT={empty:'',rec:'REC',dub:'DUB',play:'PLAY',stop:'STOP',wait:'WAIT'};
+const STATE_COL={rec:'var(--rec)',dub:'var(--dub)',play:'var(--play)',wait:'var(--wait)',stop:'#888'};
+let lcdKey='';
+function nowFrame(){return ctx?ctx.currentTime*sr:0;}
+function trackPhase(t,f){
+  if(t.state==='rec'){
+    if(st.master.M>0)return mod(f-t.recOrigin,st.master.M)/st.master.M;
+    return null;
+  }
+  if(!t.L)return 0;
+  if(t.oneShot)return t.state==='play'||t.state==='dub'?clamp(t.osPos/t.L,0,1):0;
+  let p=mod(f-t.origin,t.L)/t.L; if(t.reverse)p=1-p; return p;
+}
+function levelOf(an){
+  if(!an)return 0; const a=new Float32Array(an.fftSize); an.getFloatTimeDomainData(a);
+  let m=0;for(let i=0;i<a.length;i++)m=Math.max(m,Math.abs(a[i]));return m;
+}
+function frame(){
+  const f=nowFrame(), blinkOn=(performance.now()%500)<250;
+  // strips
+  st.tracks.forEach((t,k)=>{
+    const o=strips[k], col=STATE_COL[t.state]||'#333';
+    let p=trackPhase(t,f);
+    let bg;
+    if(t.state==='empty')bg='#0c0c0d';
+    else if(t.state==='rec'&&p===null)bg=blinkOn?col:'#400';
+    else if(t.state==='wait')bg=blinkOn?col:'#331a00';
+    else if(t.state==='stop')bg=`conic-gradient(#555 0turn,#555 1turn)`;
+    else bg=`conic-gradient(${col} 0turn ${p}turn, #2a2a2a ${p}turn 1turn)`;
+    o.ring.style.background=bg;
+    o.stEl.textContent=STATE_TXT[t.state]+(t.state==='rec'&&t.recTarget?' → '+(t.recNext||'').toUpperCase():'');
+    o.stEl.style.color=STATE_COL[t.state]||'#666';
+    o.len.innerHTML=t.L?'<b>'+(t.L/sr).toFixed(2)+'s</b>'+(st.master.M?' · '+Math.round(t.L/st.master.M*S.bars)+' bar':''):'';
+    o.el.classList.toggle('sel',S.sel===k);
+    o.fxb.classList.toggle('on',S.tracks[k].fx);
+    o.trb.classList.toggle('on',S.sel===k&&S.page==='track');
+  });
+  // banks
+  [...$('inFxBanks').children].forEach((b,i)=>b.classList.toggle('on',S.inFx.on&&S.inFx.bank===i));
+  [...$('trFxBanks').children].forEach((b,i)=>b.classList.toggle('on',S.trFx.bank===i));
+  $('rhyBtn').classList.toggle('on',S.rhythmOn);
+  $('menuBtn').classList.toggle('on',S.page==='menu');
+  $('loopBtn').classList.toggle('on',S.page==='loop');
+  const lt=st.tracks[st.last];
+  $('undoBtn').classList.toggle('on',!!(lt&&(lt.canUndo||lt.canRedo)));
+  // tap tempo LED blinks with beat
+  let beatPos=0;
+  if(st.master.M>0){const beatF=st.master.M/(4*S.bars);beatPos=mod(f-st.master.anchor,beatF)/beatF;}
+  else beatPos=mod(f/sr,60/S.tempo)/(60/S.tempo);
+  $('tapBtn').classList.toggle('on',beatPos<0.15);
+  assignKnobs.forEach(k=>k._draw()); kInFx._draw(); kTrFx._draw();
+  renderLCD(f);
+  requestAnimationFrame(frame);
+}
+function bar(frac){return `<div class="bar"><i style="width:${(clamp(frac,0,1)*100).toFixed(1)}%"></i></div>`;}
+function renderLCD(f){
+  let h='';
+  if(S.page==='main'){
+    const m=st.master;
+    let meas='--/--',beat='-';
+    if(m.M>0){const pos=mod(f-m.anchor,m.M)/m.M;const totBeats=4*S.bars;const b=Math.floor(pos*totBeats);meas=String(Math.floor(b/4)+1).padStart(2,'0')+'/'+String(S.bars).padStart(2,'0');beat=(b%4)+1;}
+    h+=`<div class="row hdr"><span>MEMORY 01</span><span>♩=${currentTempo().toFixed(1)}</span><span>${PATTERNS[S.pattern].name}${S.rhythmOn?' ▶':''}</span></div>`;
+    h+=`<div class="trk">${st.tracks.map((t,k)=>`<div class="${t.state==='rec'||t.state==='dub'||t.state==='play'||(k===S.sel&&t.state==='empty')?'inv':''}">${k+1}${t.state==='empty'?'':' '+STATE_TXT[t.state][0]}</div>`).join('')}</div>`;
+    h+=m.M>0?bar(mod(f-m.anchor,m.M)/m.M):bar(0);
+    const inl=levelOf(inAnalyser),outl=levelOf(analyser);
+    h+=`<div class="row"><span>MEAS ${meas}  BEAT ${beat}</span><span>${S.inFx.on?'IFX:'+S.inFx.types[S.inFx.bank]:''}</span></div>`;
+    h+=`<div class="row"><span class="meter">IN <span style="width:${(clamp(inl,0,1)*6).toFixed(2)}em"></span></span><span class="meter">OUT <span style="width:${(clamp(outl,0,1)*6).toFixed(2)}em"></span></span><span>${micStatus}</span></div>`;
+    const pan=Math.round((S.tracks[S.sel].pan-0.5)*100);
+    h+=`<div class="knobs"><span>TEMPO</span><span>RHY.LV ${Math.round(S.rhyLevel*100)}</span><span>IN.LV ${Math.round(S.inLevel*100)}</span><span>PAN${S.sel+1} ${pan===0?'C':pan<0?'L'+(-pan):'R'+pan}</span></div>`;
+  }else{
+    const P=PAGES[S.page], title=typeof P.title==='function'?P.title():P.title;
+    h+=`<div class="row hdr"><span>${title}</span><span>◀▶ MOVE  ENTER SET</span></div><div class="menu">`;
+    P.items.forEach((it,i)=>{h+=`<div data-i="${i}" class="${i===S.cursor?'sel':''}"><span>${it.l}</span><span>${it.v()}</span></div>`;});
+    h+='</div>';
+  }
+  if(S.popup&&performance.now()<S.popupT)h+=`<div class="popup">${S.popup}</div>`;
+  if(h!==lcdKey){$('lcd').innerHTML=h;lcdKey=h;}
+}
+$('lcd').addEventListener('click',e=>{const d=e.target.closest('[data-i]');if(!d)return;S.cursor=+d.dataset.i;enter(e.shiftKey?-1:1);});
+$('lcd').addEventListener('wheel',e=>{const d=e.target.closest('[data-i]');if(!d)return;e.preventDefault();S.cursor=+d.dataset.i;enter(e.deltaY<0?1:-1);},{passive:false});
+$('lcd').addEventListener('contextmenu',e=>{const d=e.target.closest('[data-i]');if(!d)return;e.preventDefault();S.cursor=+d.dataset.i;enter(-1);});
+
+/* ---------------- Keyboard ---------------- */
+const STOPKEYS='qwert'; const held={};
+document.addEventListener('keydown',e=>{
+  if(e.repeat||e.ctrlKey||e.metaKey||e.altKey)return;
+  const key=e.key.toLowerCase();
+  if(key>='1'&&key<='5'){trackPress(+key-1);e.preventDefault();return;}
+  const si=STOPKEYS.indexOf(key);
+  if(si>=0){trackStop(si);held[key]=setTimeout(()=>{delete held[key];trackClear(si);},1000);return;}
+  switch(key){
+    case ' ':e.preventDefault();allStartStop();break;
+    case 'z':undoRedo();break;
+    case 'b':rhythmToggle();break;
+    case 'g':tap();break;
+    case 'arrowleft':case 'arrowup':e.preventDefault();nav(-1);break;
+    case 'arrowright':case 'arrowdown':e.preventDefault();nav(1);break;
+    case 'enter':e.preventDefault();enter(1);break;
+    case 'escape':S.page='main';break;
+  }
+});
+document.addEventListener('keyup',e=>{const key=e.key.toLowerCase();if(held[key]){clearTimeout(held[key]);delete held[key];}});
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 # Loop Gizmo — Owner's Manual
 
-**Version 2.0**
+**Version 2.0** · 🇮🇹 [Versione italiana](MANUAL.it.md)
 
 ▶ **Live version: [https://droogia.github.io/loop-gizmo/](https://droogia.github.io/loop-gizmo/)**
 

@@ -6,6 +6,10 @@
 
 Loop Gizmo is a 6-track loop station that runs in a web browser. It follows the workflow of a hardware tabletop looper: record a phrase, layer more on top, stack parts on separate tracks, add a drum rhythm, and shape everything with effects in real time.
 
+![Loop Gizmo panel](docs/panel.png)
+
+*The Loop Gizmo panel: input FX (left), LCD and menu buttons (top centre), track FX (right), the middle control row, and the six track strips.*
+
 ---
 
 ## Contents

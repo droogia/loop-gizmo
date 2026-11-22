@@ -6,6 +6,10 @@
 
 Loop Gizmo è una loop station a 6 tracce che funziona nel browser. Segue il flusso di lavoro di un looper hardware da tavolo: registri una frase, ci sovrapponi altre parti, distribuisci le parti su tracce separate, aggiungi una base ritmica di batteria e modelli tutto con gli effetti in tempo reale.
 
+![Pannello di Loop Gizmo](docs/panel.png)
+
+*Il pannello di Loop Gizmo: effetti d'ingresso (sinistra), display e pulsanti dei menu (in alto al centro), effetti di traccia (destra), la fila di comandi centrale e le sei strisce delle tracce.*
+
 I nomi dei comandi (pulsanti, manopole, pagine del display) sono riportati in inglese, esattamente come appaiono sul pannello.
 
 ---
